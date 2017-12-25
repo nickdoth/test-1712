@@ -4,14 +4,14 @@
 #define FILE_NAME "./thbgm12.dat"
 
 // th12, 青空の影
-#define _BGM_START (0x10)
-#define _BGM_LEN   (0x909FC0 + 0xF8040)
-#define _BGM_LOOP_POINT (0xF8040)
+// #define _BGM_START (0x10)
+// #define _BGM_LEN   (0x909FC0 + 0xF8040)
+// #define _BGM_LOOP_POINT (0xF8040)
 
 // th12, 春の湊に
-// #define _BGM_START (0xA02010)
-// #define _BGM_LEN   (0xE96680 + 0x24F900)
-// #define _BGM_LOOP_POINT (0x24F900)
+#define _BGM_START (0xA02010)
+#define _BGM_LEN   (0xE96680 + 0x24F900)
+#define _BGM_LOOP_POINT (0x24F900)
 
 // th15, 宇宙巫女現る
 // #define _BGM_START (0x10)

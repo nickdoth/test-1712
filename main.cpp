@@ -1,10 +1,14 @@
+#include <memory>
 #include <iostream>
 #include <fstream>
+#include <vector>
 #include <utility>
 #include <ui.h>
 #include <portaudio.h>
 
 #include "dummies.h"
+
+using std::unique_ptr;
 
 typedef struct THPlayback {
     uint16_t* offset_start;
@@ -12,6 +16,8 @@ typedef struct THPlayback {
     uint16_t* offset_loop_point;
     uint16_t* data_pointer;
 } THPlayback;
+
+#define try_or(expr) if (!(expr))
 
 
 /**
@@ -22,32 +28,40 @@ typedef struct THPlayback {
  * When total_len was played, the BGM cursor go back to loop_start
  */
 
-int initAudio();
+int initAudio(unique_ptr<THPlayback>);
 int initUi();
 
 int main(void) {
-    PaError err = Pa_Initialize();
-    if (err != paNoError) {
-        return 1;
-    }
+    const size_t bgm_size = _BGM_LEN;
+    // auto data = std::vector<char>(bgm_size);
+    auto data = new char[bgm_size];
 
-    size_t bgm_size = _BGM_LEN;
-    char* data = new char[bgm_size];
-    
     std::ifstream th_bgm(FILE_NAME, std::ios::binary);
     th_bgm.seekg(_BGM_START, std::ios::beg);
-    th_bgm.read((char*) data, bgm_size);
+    th_bgm.read(data, bgm_size);
     th_bgm.close();
 
-    THPlayback* playback = new THPlayback;
+    auto playback = unique_ptr<THPlayback>(new THPlayback);
     playback->offset_start = (uint16_t*) (data);
     playback->offset_loop_point = (uint16_t*) (data + _BGM_LOOP_POINT);
     playback->data_pointer = (uint16_t*) (data);
     playback->offest_end = (uint16_t*) (data + bgm_size);
 
+    initAudio(std::move(playback));
+
+    getchar();
+
+    return 0;
+}
+
+int initAudio(unique_ptr<THPlayback> playback) {
+    try_or(Pa_Initialize() == paNoError) {
+        return 1;
+    }
+
     PaStream* mainStream;
 
-    Pa_OpenDefaultStream(
+    try_or(Pa_OpenDefaultStream(
         &mainStream,
         0,
         2,
@@ -73,17 +87,20 @@ int main(void) {
                 
                 return 0;
             },
-        playback
-    );
+        playback.get()
+    ) == paNoError) {
+        std::cerr << "Cannot create stream" << std::endl;
+        Pa_CloseStream(mainStream);
+        return 1;
+    }
 
-    Pa_StartStream(mainStream);
+    try_or(Pa_StartStream(mainStream) == paNoError) {
+        std::cerr << "Cannot start streaming" << std::endl;
+        Pa_CloseStream(mainStream);
+        return 1;
+    }
 
-    getchar();
-    
-    return 0;
-}
-
-int initAudio() {
+    // Pa_CloseStream(mainStream);
     return 0;
 }
 
