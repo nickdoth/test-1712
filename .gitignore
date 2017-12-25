@@ -1,0 +1,9 @@
+/out/
+/external/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+/Makefile
+.vscode/cpp-tags*
+.vscode/settings.json
+/dep_*-prefix/
