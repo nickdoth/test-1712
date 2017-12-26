@@ -1,7 +1,6 @@
 #include <memory>
 #include <iostream>
 #include <fstream>
-#include <vector>
 #include <utility>
 #include <ui.h>
 #include <portaudio.h>
@@ -9,6 +8,7 @@
 #include "dummies.h"
 
 using std::unique_ptr;
+using std::shared_ptr;
 
 typedef struct THPlayback {
     uint16_t* offset_start;
@@ -28,33 +28,33 @@ typedef struct THPlayback {
  * When total_len was played, the BGM cursor go back to loop_start
  */
 
-int initAudio(unique_ptr<THPlayback>);
+int initAudio(shared_ptr<THPlayback>);
 int initUi();
 
 int main(void) {
     const size_t bgm_size = _BGM_LEN;
-    // auto data = std::vector<char>(bgm_size);
-    auto data = new char[bgm_size];
+    auto data = unique_ptr<char>(new char[bgm_size]);
+    // auto data = new char[bgm_size];
 
     std::ifstream th_bgm(FILE_NAME, std::ios::binary);
     th_bgm.seekg(_BGM_START, std::ios::beg);
-    th_bgm.read(data, bgm_size);
+    th_bgm.read(data.get(), bgm_size);
     th_bgm.close();
 
-    auto playback = unique_ptr<THPlayback>(new THPlayback);
-    playback->offset_start = (uint16_t*) (data);
-    playback->offset_loop_point = (uint16_t*) (data + _BGM_LOOP_POINT);
-    playback->data_pointer = (uint16_t*) (data);
-    playback->offest_end = (uint16_t*) (data + bgm_size);
+    auto playback = shared_ptr<THPlayback>(new THPlayback);
+    playback->offset_start = (uint16_t*) (data.get());
+    playback->offset_loop_point = (uint16_t*) (data.get() + _BGM_LOOP_POINT);
+    playback->data_pointer = (uint16_t*) (data.get());
+    playback->offest_end = (uint16_t*) (data.get() + bgm_size);
 
-    initAudio(std::move(playback));
+    initAudio(playback);
 
     getchar();
 
     return 0;
 }
 
-int initAudio(unique_ptr<THPlayback> playback) {
+int initAudio(shared_ptr<THPlayback> playback) {
     try_or(Pa_Initialize() == paNoError) {
         return 1;
     }
@@ -68,12 +68,12 @@ int initAudio(unique_ptr<THPlayback> playback) {
         paInt16,
         44100,
         paFramesPerBufferUnspecified,
-        [] (const void *inputBuffer,
-                void *outputBuffer,
+        [] (const void* inputBuffer,
+                void* outputBuffer,
                 unsigned long framesPerBuffer,
                 const PaStreamCallbackTimeInfo* timeInfo,
                 PaStreamCallbackFlags statusFlags,
-                void *userData
+                void* userData
             ) {
                 int16_t* out = (int16_t*) outputBuffer;
                 THPlayback* pb = (THPlayback*) userData;
@@ -82,6 +82,7 @@ int initAudio(unique_ptr<THPlayback> playback) {
                     *out++ = *(pb->data_pointer++);
                     if (pb->data_pointer >= pb->offest_end) {
                         pb->data_pointer = pb->offset_loop_point;
+                        std::cout << "Loop Point" << std::endl;
                     }
                 }
                 

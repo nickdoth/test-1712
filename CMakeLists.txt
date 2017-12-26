@@ -23,7 +23,7 @@ ExternalProject_Add(
     GIT_TAG origin/cmake-install
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
 )
-add_dependencies(test-1712 dep_libui)
+# add_dependencies(test-1712 dep_libui)
 find_library(EXT_UI NAME ui PATHS ${EXTERNAL_INSTALL_LOCATION}/lib)
 
 # Deps: libportaudio
@@ -32,7 +32,7 @@ ExternalProject_Add(
     GIT_REPOSITORY https://git.assembla.com/portaudio.git
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
 )
-add_dependencies(test-1712 dep_portaudio)
+# add_dependencies(test-1712 dep_portaudio)
 find_library(EXT_PORTAUDIO NAME portaudio PATHS ${EXTERNAL_INSTALL_LOCATION}/lib)
 
 include_directories(${EXTERNAL_INSTALL_LOCATION}/include)
